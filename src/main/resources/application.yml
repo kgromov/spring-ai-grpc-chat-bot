@@ -25,5 +25,6 @@ spring:
   grpc:
     server:
       address: 'static://localhost:9090'
+      enabled: false
 
 

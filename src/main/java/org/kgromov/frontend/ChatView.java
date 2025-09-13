@@ -14,10 +14,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kgromov.assistant.ChatParticipant;
 import org.kgromov.assistant.ChatService;
+import org.springframework.ai.chat.model.ChatResponse;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static org.kgromov.assistant.ChatParticipant.ASSISTANT;
 import static org.kgromov.assistant.ChatParticipant.USER;
@@ -39,6 +42,18 @@ class ChatView extends VerticalLayout {
 
         input.addSubmitListener(event -> {
             this.processMessage(USER, event.getValue());
+//            this.startProgress();
+//            log.debug("Call chat service: {}", event.getValue());
+//            var answer = chatService.ask(event.getValue())
+//                    .toStream()
+//                    .map(response -> response.getResult().getOutput().getText())
+//                    .collect(Collectors.joining("\n"));
+//            this.processMessage(ASSISTANT, answer);
+////                    .subscribe(
+////                            (response) -> this.processMessage(ASSISTANT, response.getResult().getOutput().getText()),
+////                            (error) -> log.error("Error while calling chat service", error),
+////                            this::stopProgress
+////                    );
 
             CompletableFuture.supplyAsync(() -> {
                         this.startProgress();

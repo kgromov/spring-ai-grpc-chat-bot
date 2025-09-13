@@ -31,6 +31,7 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor
 public class FilesUploader extends VerticalLayout {
     private final EmbeddingsService embeddingsService;
+    // FIXME: rewrite to new UploadHandler - https://vaadin.com/docs/latest/flow/advanced/upload-resources
     private final MultiFileMemoryBuffer memoryBuffer = new MultiFileMemoryBuffer();
     private final Upload fileUploader = new Upload(memoryBuffer);
 
