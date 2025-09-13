@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package chat.bot;
+option java_multiple_files = true;
+option java_outer_classname = "ChatBot";
+option java_package = "com.kgromov.chat.bot";
+
+import "google/protobuf/timestamp.proto";
+
+service ChatService {
+  rpc SendMessage (ChatMessage) returns (ChatResponse);
+  rpc StreamMessages (ChatMessage) returns (stream ChatResponse);
+  //  rpc StreamMessages (stream ChatMessage) returns (stream ChatResponse);
+}
+
+message ChatMessage {
+  ChatParticipant user = 1;
+  string message = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message ChatResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ChatParticipant {
+  ChatParticipantRole role = 1;
+  string name = 2;
+  string avatar = 3;
+}
+
+enum ChatParticipantRole {
+  UNKNOWN = 0;
+  USER = 1;
+  ASSISTANT = 2;
+}

@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: spring-ai-grpc-chat-bot
+  ai:
+    azure:
+      openai:
+        api-key: ${GITHUB_TOKEN}
+        endpoint: "https://models.inference.ai.azure.com"
+        chat:
+          options:
+            model: gpt-4o
+            deployment-name: gpt-4o
+        embedding:
+          options:
+            model: text-embedding-3-small
+            deployment-name: text-embedding-3-small
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 1MB
+      enabled: true
+  grpc:
+    server:
+      address: 'static://localhost:9090'
+
+
