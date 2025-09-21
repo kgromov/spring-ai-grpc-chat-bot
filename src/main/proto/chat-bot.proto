@@ -9,8 +9,7 @@ import "google/protobuf/timestamp.proto";
 
 service ChatService {
   rpc SendMessage (ChatMessage) returns (ChatResponse);
-  rpc StreamMessages (ChatMessage) returns (stream ChatResponse);
-  //  rpc StreamMessages (stream ChatMessage) returns (stream ChatResponse);
+  rpc StreamMessages (stream ChatMessage) returns (stream ChatResponse);
 }
 
 message ChatMessage {

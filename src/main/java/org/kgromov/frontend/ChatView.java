@@ -1,5 +1,6 @@
 package org.kgromov.frontend;
 
+import com.kgromov.chat.bot.ChatMessage;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.messages.MessageInput;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kgromov.assistant.ChatParticipant;
 import org.kgromov.assistant.ChatService;
+import org.kgromov.grpc.GrpcChatServiceClient;
 import org.springframework.ai.chat.model.ChatResponse;
 
 import java.time.Instant;
@@ -31,6 +33,8 @@ import static org.kgromov.assistant.ChatParticipant.USER;
 @RequiredArgsConstructor
 class ChatView extends VerticalLayout {
     private final ChatService chatService;
+    private final GrpcChatServiceClient client;
+
     private final MessageList chat = new MessageList();
     private final MessageInput input = new MessageInput();
     private final FilesUploader filesUploader;
@@ -41,29 +45,16 @@ class ChatView extends VerticalLayout {
         configureLayout();
 
         input.addSubmitListener(event -> {
-            this.processMessage(USER, event.getValue());
-//            this.startProgress();
-//            log.debug("Call chat service: {}", event.getValue());
-//            var answer = chatService.ask(event.getValue())
-//                    .toStream()
-//                    .map(response -> response.getResult().getOutput().getText())
-//                    .collect(Collectors.joining("\n"));
-//            this.processMessage(ASSISTANT, answer);
-////                    .subscribe(
-////                            (response) -> this.processMessage(ASSISTANT, response.getResult().getOutput().getText()),
-////                            (error) -> log.error("Error while calling chat service", error),
-////                            this::stopProgress
-////                    );
 
-            CompletableFuture.supplyAsync(() -> {
-                        this.startProgress();
-                        log.debug("Call chat service: {}", event.getValue());
-                        return chatService.answer(event.getValue());
-                    })
-                    .whenComplete((answer, ex) -> {
-                        this.stopProgress();
-                        this.processMessage(ASSISTANT, answer);
-                    });
+            Runnable clientRequest = () -> this.processMessage(USER, event.getValue());
+            Runnable serverResponse = () -> {
+                this.startProgress();
+                log.debug("Call chat service: {}", event.getValue());
+                String answer = chatService.answer(event.getValue());
+                this.stopProgress();
+                this.processMessage(ASSISTANT, answer);
+            };
+            client.streamMessage(ChatMessage.newBuilder().setMessage(event.getValue()).build(), clientRequest, serverResponse);
         });
     }
 

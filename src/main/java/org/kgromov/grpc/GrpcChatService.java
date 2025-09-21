@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.kgromov.assistant.ChatService;
 import org.springframework.grpc.server.service.GrpcService;
 
+import java.util.Objects;
+
 @GrpcService
 @RequiredArgsConstructor
 public class GrpcChatService extends ChatServiceImplBase {
@@ -15,23 +17,19 @@ public class GrpcChatService extends ChatServiceImplBase {
 
     @Override
     public void sendMessage(ChatMessage request, StreamObserver<ChatResponse> responseObserver) {
+        if (Objects.equals(request.getMessage(), "/exit")) {
+            responseObserver.onNext( ChatResponse.newBuilder().setMessage("Bye!").build());
+            responseObserver.onCompleted();
+            return;
+        }
         String answer = chatService.answer(request.getMessage());
         ChatResponse chatResponse = ChatResponse.newBuilder().setMessage(answer).build();
         responseObserver.onNext(chatResponse);
-        responseObserver.onCompleted();
     }
 
     @Override
-    public void streamMessages(ChatMessage request, StreamObserver<ChatResponse> responseObserver) {
-        chatService.answerStreaming(request.getMessage())
-                .map(response -> response.getResult().getOutput().getText())
-                .map(message -> ChatResponse.newBuilder().setMessage(message).build())
-                .subscribe(responseObserver::onNext, responseObserver::onError, responseObserver::onCompleted);
-//                .subscribe(
-//                        (message) -> responseObserver.onNext(message),
-//                        (error) -> responseObserver.onError(error),
-//                        () -> responseObserver.onCompleted()
-//                );
+    public StreamObserver<ChatMessage> streamMessages(StreamObserver<ChatResponse> responseObserver) {
+        return new ChatMessageHandler(responseObserver, chatService);
     }
 
 }
