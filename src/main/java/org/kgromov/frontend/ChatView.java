@@ -21,7 +21,9 @@ import org.springframework.ai.chat.model.ChatResponse;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static org.kgromov.assistant.ChatParticipant.ASSISTANT;
@@ -45,14 +47,23 @@ class ChatView extends VerticalLayout {
         configureLayout();
 
         input.addSubmitListener(event -> {
-
-            Runnable clientRequest = () -> this.processMessage(USER, event.getValue());
-            Runnable serverResponse = () -> {
+            Runnable clientRequest = () -> {
+                this.processMessage(USER, event.getValue());
+                this.startProgress();
+                log.debug("Call chat service: {}", event.getValue());
+            };
+            Consumer<com.kgromov.chat.bot.ChatResponse> serverResponse = response -> {
+                this.stopProgress();
+                this.processMessage(ASSISTANT, response.getMessage());
+            };
+            // from common sense it makes sense to use Callable but the issue is how to pass it to response observer
+            Callable<com.kgromov.chat.bot.ChatResponse> serverResponseCallable = () -> {
                 this.startProgress();
                 log.debug("Call chat service: {}", event.getValue());
                 String answer = chatService.answer(event.getValue());
                 this.stopProgress();
                 this.processMessage(ASSISTANT, answer);
+                return com.kgromov.chat.bot.ChatResponse.newBuilder().setMessage(answer).build();
             };
             client.streamMessage(ChatMessage.newBuilder().setMessage(event.getValue()).build(), clientRequest, serverResponse);
         });
